@@ -69,6 +69,4 @@ No outputs.
 
 ## History
 
-| Date       | Release | Change                                                                              |
-| ---------- | ------- | ----------------------------------------------------------------------------------- |
-| 2026-01-25 | v0.0.1  | initial commit                                                                      |
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
