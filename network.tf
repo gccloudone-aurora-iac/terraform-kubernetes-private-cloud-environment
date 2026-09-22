@@ -1,9 +1,9 @@
 # Deploys OpenStack network resources.
 #
-# https://github.com/gccloudone-aurora-iac/terraform-private-cloud-kubernetes-cluster
+# ./modules/openstack-network
 #
 module "network_system" {
-  source = "git::https://github.com/gccloudone-aurora-iac/terraform-private-cloud-openstack-network.git?ref=main"
+  source = "./modules/openstack-network"
 
   # We have to use just the instance here,
   # since there is a name length of 20 characters.
@@ -29,10 +29,10 @@ resource "openstack_networking_router_interface_v2" "system" {
 
 # Deploys OpenStack network resources.
 #
-# https://github.com/gccloudone-aurora-iac/terraform-private-cloud-kubernetes-cluster
+# ./modules/openstack-network
 #
 module "network_general" {
-  source = "git::https://github.com/gccloudone-aurora-iac/terraform-private-cloud-openstack-network.git?ref=main"
+  source = "./modules/openstack-network"
 
   # We have to use just the instance here,
   # since there is a name length of 20 characters.
@@ -58,10 +58,10 @@ resource "openstack_networking_router_interface_v2" "general" {
 
 # Deploys OpenStack network resources.
 #
-# https://github.com/gccloudone-aurora-iac/terraform-private-cloud-kubernetes-cluster
+# ./modules/openstack-network
 #
 module "network_gateway" {
-  source = "git::https://github.com/gccloudone-aurora-iac/terraform-private-cloud-openstack-network.git?ref=main"
+  source = "./modules/openstack-network"
 
   # We have to use just the instance here,
   # since there is a name length of 20 characters.
@@ -87,10 +87,10 @@ resource "openstack_networking_router_interface_v2" "gateway" {
 
 # Deploys OpenStack network resources.
 #
-# https://github.com/gccloudone-aurora-iac/terraform-private-cloud-kubernetes-cluster
+# ./modules/openstack-network
 #
 module "network_loadbalancer" {
-  source = "git::https://github.com/gccloudone-aurora-iac/terraform-private-cloud-openstack-network.git?ref=main"
+  source = "./modules/openstack-network"
 
   # We have to use just the instance here,
   # since there is a name length of 20 characters.

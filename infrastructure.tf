@@ -1,9 +1,9 @@
 # Deploys Rancher Kubernetes Cluster and its related infrastructure.
 #
-# https://github.com/gccloudone-aurora-iac/terraform-private-cloud-kubernetes-cluster
+# ./modules/kubernetes-cluster
 #
 module "infrastructure" {
-  source = "git::https://github.com/gccloudone-aurora-iac/terraform-private-cloud-kubernetes-cluster.git?ref=main"
+  source = "./modules/kubernetes-cluster"
 
   openstack_application_credential_id     = var.openstack_application_credential_id
   openstack_application_credential_secret = var.openstack_application_credential_secret
@@ -23,7 +23,7 @@ module "infrastructure" {
     flavour = "g4v-16"
     count   = 1
     labels = {
-      "node.ssc-spc.gc.ca/use" = "general"
+      "node.ssc-spc.gc.ca/use"     = "general"
       "node.ssc-spc.gc.ca/purpose" = "system"
     }
     taints          = []
@@ -39,7 +39,7 @@ module "infrastructure" {
     flavour = "g4v-16"
     count   = 1
     labels = {
-      "node.ssc-spc.gc.ca/use" = "general"
+      "node.ssc-spc.gc.ca/use"     = "general"
       "node.ssc-spc.gc.ca/purpose" = "general"
     }
     taints          = []
@@ -55,7 +55,7 @@ module "infrastructure" {
     flavour = "g4v-16"
     count   = 1
     labels = {
-      "node.ssc-spc.gc.ca/use" = "general"
+      "node.ssc-spc.gc.ca/use"     = "general"
       "node.ssc-spc.gc.ca/purpose" = "gateway"
     }
     taints = [

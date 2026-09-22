@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+
+openstack_application_credential_id     = ""
+openstack_application_credential_secret = ""
+openstack_auth_url                      = ""
+openstack_domain_id                     = ""
+openstack_project_id                    = ""
+openstack_region                        = ""
+
+rancher_api_url = ""
+rancher_token   = ""

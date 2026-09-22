@@ -1,0 +1,56 @@
+name: Terraform Checks
+run-name: "Terraform checks: ${{ github.event.pull_request.title || github.ref_name }}"
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: fmt and validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.1"
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      # -backend=false so no OpenStack or Rancher credentials and no remote state
+      # are needed. Every module source is a local path under modules/, so this
+      # reaches the provider registry and nothing else.
+      - name: Terraform init
+        run: terraform init -backend=false -input=false
+
+      - name: Terraform validate
+        run: terraform validate -no-color
+
+  terraform_docs:
+    name: terraform-docs up to date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check generated READMEs are up to date
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: .
+          recursive: true
+          recursive-path: modules
+          output-file: README.md
+          output-method: inject
+          fail-on-diff: true
