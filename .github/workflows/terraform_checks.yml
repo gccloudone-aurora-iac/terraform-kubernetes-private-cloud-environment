@@ -23,20 +23,49 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.9.1"
+          terraform_version: "1.12.2"
           terraform_wrapper: false
 
       - name: Terraform fmt
         run: terraform fmt -check -recursive -diff
 
-      # -backend=false so no OpenStack or Rancher credentials and no remote state
-      # are needed. Every module source is a local path under modules/, so this
-      # reaches the provider registry and nothing else.
+      # -backend=false so no cloud credentials or remote state are needed. Every module is
+      # local, so this reaches only the provider registry.
       - name: Terraform init
         run: terraform init -backend=false -input=false
 
       - name: Terraform validate
         run: terraform validate -no-color
+
+  examples:
+    name: examples validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.2"
+          terraform_wrapper: false
+
+      # Root `terraform validate` does not descend into examples/, so each example module
+      # is validated on its own. This handles both layouts in use across the Aurora repos:
+      # examples/ as a single module, and examples/<name>/ subdirectories. A repository
+      # with no examples/ directory is a no-op.
+      - name: Terraform validate examples
+        run: |
+          set -euo pipefail
+          found=0
+          for dir in $(find examples -name '*.tf' -exec dirname {} \; 2>/dev/null | sort -u); do
+            found=1
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate -no-color
+            echo "::endgroup::"
+          done
+          if [ "$found" = "0" ]; then echo "No examples/ directory; nothing to validate."; fi
 
   terraform_docs:
     name: terraform-docs up to date
@@ -49,6 +78,7 @@ jobs:
         uses: terraform-docs/gh-actions@v1
         with:
           working-dir: .
+          config-file: .terraform-docs.yml
           recursive: true
           recursive-path: modules
           output-file: README.md

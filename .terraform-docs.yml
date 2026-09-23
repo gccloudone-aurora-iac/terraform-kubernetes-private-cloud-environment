@@ -1,0 +1,84 @@
+formatter: "markdown table"
+version: "0.20.0"
+
+# Aurora standard. This file is identical in every environment repository.
+#
+# Its only purpose is to put emoji on the six generated section headings. Every table row
+# below reproduces terraform-docs' default `markdown table` output byte for byte — verified
+# across all 39 module directories in the four repos — so switching this file out for the
+# built-in formatter would change nothing but the headings.
+#
+# Escaping goes through terraform-docs' own `sanitizeMarkdownTbl`, which is code-span aware:
+# a hand-rolled underscore replace corrupts descriptions containing `var.some_name`.
+
+output:
+  file: README.md
+  mode: inject
+
+content: |-
+  ## 📋 Requirements
+  {{ if not .Module.Requirements }}
+  No requirements.
+  {{- else }}
+  | Name | Version |
+  |------|---------|
+  {{- range .Module.Requirements }}
+  | <a name="requirement_{{ .Name }}"></a> [{{ .Name | replace "_" "\\_" }}](#requirement\_{{ .Name | replace "_" "\\_" }}) | {{ if .Version }}{{ .Version }}{{ else }}n/a{{ end }} |
+  {{- end }}
+  {{- end }}
+
+  ## 🔌 Providers
+  {{ if not .Module.Providers }}
+  No providers.
+  {{- else }}
+  | Name | Version |
+  |------|---------|
+  {{- range .Module.Providers }}
+  | <a name="provider_{{ .Name }}"></a> [{{ .Name | replace "_" "\\_" }}](#provider\_{{ .Name | replace "_" "\\_" }}) | {{ if .Version }}{{ .Version }}{{ else }}n/a{{ end }} |
+  {{- end }}
+  {{- end }}
+
+  ## 🧩 Modules
+  {{ if not .Module.ModuleCalls }}
+  No modules.
+  {{- else }}
+  | Name | Source | Version |
+  |------|--------|---------|
+  {{- range .Module.ModuleCalls }}
+  | <a name="module_{{ .Name }}"></a> [{{ .Name | replace "_" "\\_" }}](#module\_{{ .Name | replace "_" "\\_" }}) | {{ .Source }} | {{ if .Version }}{{ .Version }}{{ else }}n/a{{ end }} |
+  {{- end }}
+  {{- end }}
+
+  ## 🗂️ Resources
+  {{ if not .Module.Resources }}
+  No resources.
+  {{- else }}
+  | Name | Type |
+  |------|------|
+  {{- range .Module.Resources }}
+  | [{{ .Spec }}]({{ .URL }}) | {{ .GetMode }} |
+  {{- end }}
+  {{- end }}
+
+  ## 📥 Inputs
+  {{ if not .Module.Inputs }}
+  No inputs.
+  {{- else }}
+  | Name | Description | Type | Default | Required |
+  |------|-------------|------|---------|:--------:|
+  {{- range .Module.Inputs }}
+  {{- $t := printf "%v" .Type }}{{ $d := printf "%v" .GetValue }}
+  | <a name="input_{{ .Name }}"></a> [{{ .Name | replace "_" "\\_" }}](#input\_{{ .Name | replace "_" "\\_" }}) | {{ $desc := printf "%v" .Description | trim " \n" }}{{ if $desc }}{{ sanitizeMarkdownTbl $desc }}{{ else }}n/a{{ end }} | {{ if contains "\n" $t }}<pre>{{ $t | replace "\n" "<br/>" }}</pre>{{ else }}`{{ $t }}`{{ end }} | {{ if .HasDefault }}{{ if contains "\n" $d }}<pre>{{ $d | replace "\n" "<br/>" }}</pre>{{ else }}`{{ $d }}`{{ end }}{{ else }}n/a{{ end }} | {{ ternary .Required "yes" "no" }} |
+  {{- end }}
+  {{- end }}
+
+  ## 📤 Outputs
+  {{ if not .Module.Outputs }}
+  No outputs.
+  {{- else }}
+  | Name | Description |
+  |------|-------------|
+  {{- range .Module.Outputs }}
+  | <a name="output_{{ .Name }}"></a> [{{ .Name | replace "_" "\\_" }}](#output\_{{ .Name | replace "_" "\\_" }}) | {{ $desc := printf "%v" .Description | trim " \n" }}{{ if $desc }}{{ sanitizeMarkdownTbl $desc }}{{ else }}n/a{{ end }} |
+  {{- end }}
+  {{- end }}

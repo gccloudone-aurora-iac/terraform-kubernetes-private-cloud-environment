@@ -3,24 +3,24 @@
 This module configures networking for Open Stack in GC Private Cloud.
 
 <!-- BEGIN_TF_DOCS -->
-## Requirements
+## 📋 Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
 | <a name="requirement_openstack"></a> [openstack](#requirement\_openstack) | >= 3.0.0, < 4.0.0 |
 
-## Providers
+## 🔌 Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_openstack"></a> [openstack](#provider\_openstack) | >= 3.0.0, < 4.0.0 |
 
-## Modules
+## 🧩 Modules
 
 No modules.
 
-## Resources
+## 🗂️ Resources
 
 | Name | Type |
 |------|------|
@@ -28,7 +28,7 @@ No modules.
 | [openstack_networking_subnet_v2.v4](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_subnet_v2) | resource |
 | [openstack_networking_subnet_v2.v6](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_subnet_v2) | resource |
 
-## Inputs
+## 📥 Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -42,7 +42,7 @@ No modules.
 | <a name="input_prefixes_v4"></a> [prefixes\_v4](#input\_prefixes\_v4) | IPv4 network prefixes for the network. | `list(string)` | `[]` | no |
 | <a name="input_prefixes_v6"></a> [prefixes\_v6](#input\_prefixes\_v6) | IPv6 network prefixes for the network. | `list(string)` | `[]` | no |
 
-## Outputs
+## 📤 Outputs
 
 | Name | Description |
 |------|-------------|

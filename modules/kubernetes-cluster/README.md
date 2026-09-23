@@ -3,24 +3,24 @@
 This module deploys a Kubernetes cluster via Rancher in GC Private Cloud.
 
 <!-- BEGIN_TF_DOCS -->
-## Requirements
+## 📋 Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
 | <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | ~> 8.2 |
 
-## Providers
+## 🔌 Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | ~> 8.2 |
 
-## Modules
+## 🧩 Modules
 
 No modules.
 
-## Resources
+## 🗂️ Resources
 
 | Name | Type |
 |------|------|
@@ -28,7 +28,7 @@ No modules.
 | [rancher2_cluster_v2.this](https://registry.terraform.io/providers/rancher/rancher2/latest/docs/resources/cluster_v2) | resource |
 | [rancher2_machine_config_v2.this](https://registry.terraform.io/providers/rancher/rancher2/latest/docs/resources/machine_config_v2) | resource |
 
-## Inputs
+## 📥 Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -53,7 +53,7 @@ No modules.
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to assign to the OpenStack resources. | `map(string)` | `{}` | no |
 | <a name="input_worker_pool"></a> [worker\_pool](#input\_worker\_pool) | Configuration for the worker pool. | <pre>object({<br/>    name    = optional(string, "worker")<br/>    flavour = optional(string, "g4v-16")<br/>    count   = optional(number, 1)<br/>    labels  = optional(map(string))<br/>    taints = optional(list(object({<br/>      key    = string<br/>      value  = string<br/>      effect = optional(string, "NoExecute")<br/>    })), [])<br/>    security_groups = optional(list(string), ["default"])<br/>    volume_type     = optional(string, "performance")<br/>    volume_size     = optional(number, 60)<br/>    roles           = optional(list(string), ["worker"])<br/>    image_name      = optional(string)<br/>    user_data       = optional(string)<br/>    network_id      = optional(string)<br/>    subnet_id       = optional(string)<br/>  })</pre> | `{}` | no |
 
-## Outputs
+## 📤 Outputs
 
 | Name | Description |
 |------|-------------|

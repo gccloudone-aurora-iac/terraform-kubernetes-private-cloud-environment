@@ -1,28 +1,33 @@
-# terraform-aurora-private-cloud-environment
+# terraform-kubernetes-private-cloud-environment
+
+[![Terraform](https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white)](https://terraform.io/)
+[![OpenStack](https://img.shields.io/badge/OpenStack-%23ED1944.svg?style=for-the-badge&logo=openstack&logoColor=white)](https://www.openstack.org/)
+[![Rancher](https://img.shields.io/badge/Rancher-%230075A8.svg?style=for-the-badge&logo=rancher&logoColor=white)](https://www.rancher.com/)
+[![Kubernetes](https://img.shields.io/badge/kubernetes-%23326CE5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 
 This module deploys the Aurora environment in GC Private Cloud.
 
-## Usage
+## 📦 Usage
 
 Examples for this module along with various configurations can be found in the [examples/](examples/) folder.
 
 <!-- BEGIN_TF_DOCS -->
-## Requirements
+## 📋 Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
 | <a name="requirement_openstack"></a> [openstack](#requirement\_openstack) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | ~> 8.2 |
 
-## Providers
+## 🔌 Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_openstack"></a> [openstack](#provider\_openstack) | >= 3.0.0, < 4.0.0 |
 | <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | ~> 8.2 |
 
-## Modules
+## 🧩 Modules
 
 | Name | Source | Version |
 |------|--------|---------|
@@ -32,7 +37,7 @@ Examples for this module along with various configurations can be found in the [
 | <a name="module_network_loadbalancer"></a> [network\_loadbalancer](#module\_network\_loadbalancer) | ./modules/openstack-network | n/a |
 | <a name="module_network_system"></a> [network\_system](#module\_network\_system) | ./modules/openstack-network | n/a |
 
-## Resources
+## 🗂️ Resources
 
 | Name | Type |
 |------|------|
@@ -44,7 +49,7 @@ Examples for this module along with various configurations can be found in the [
 | [openstack_networking_network_v2.external](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/data-sources/networking_network_v2) | data source |
 | [openstack_networking_router_v2.default](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/data-sources/networking_router_v2) | data source |
 
-## Inputs
+## 📥 Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -62,11 +67,11 @@ Examples for this module along with various configurations can be found in the [
 | <a name="input_router_name"></a> [router\_name](#input\_router\_name) | The name of the pre-existing OpenStack router to attach each created subnet to. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to assign to the OpenStack resources. | `map(string)` | `{}` | no |
 
-## Outputs
+## 📤 Outputs
 
 No outputs.
 <!-- END_TF_DOCS -->
 
-## History
+## 📜 History
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.

@@ -16,38 +16,31 @@ is required.
 
 ### Changed
 
-- Vendored the downstream infrastructure modules into [modules/](modules/) instead of
-  referencing them as separate `git::https://` repositories, both previously unpinned at
-  `?ref=main`. See [modules/VENDOR.md](modules/VENDOR.md) for the upstream repository and
-  commit each came from. No module stays remote — there is no naming-convention module in
-  the private-cloud stack.
+- `required_version` is `>= 1.9.0, < 2.0.0` in the root, every module and every example.
+  CI pins Terraform 1.12.2.
+- CI is now `terraform_checks.yml` (fmt, validate, examples, terraform-docs drift) and
+  `trigger_release.yml` (release cut from the PR label).
+- `.terraform-docs.yml` sets emoji section headings; generated tables are otherwise
+  byte-identical to the default output. READMEs regenerated.
+- README badges.
+- Vendored both infrastructure modules into [modules/](modules/); they were unpinned
+  `git::https://` references. No module resolves over the network.
 - Aligned the networking and subnets, the node pools, and the Terraform naming conventions.
 - Uniform comment style across every `.tf` file, and a doc comment on every `resource`,
   `module` and `data` block.
 - `router_name` moved to the networking section of [variables.tf](variables.tf), where it is
   actually used.
-- The `## History` table in [README.md](README.md) has been folded into this file, which is
-  now the single release history.
 
 ### Added
 
-- `terraform fmt`, `terraform validate` and a terraform-docs drift check in CI.
 - [examples/standard.tf](examples/standard.tf) and
   [examples/terraform.tfvars.example](examples/terraform.tfvars.example); the README had
   linked to `examples/` since the initial commit, but the directory did not exist.
 - A generated `README.md` for every vendored module.
-- [AGENTS.md](AGENTS.md) and [modules/VENDOR.md](modules/VENDOR.md).
 
 ### Fixed
 
-- `router_name` was described as the router to attach to "the Vault cluster subnet"; nothing
-  in this module is Vault.
 - `kubernetes_version` is an RKE2 version string as Rancher reports it, for example
   `v1.34.1+rke2r1`, not a bare Kubernetes version.
-- Typos and missing descriptions across variables and outputs, and an explicit `type` on
-  every variable that previously rendered as `any`.
-- A misaligned `### Rancher Resources ###` banner in
-  `modules/kubernetes-cluster/variables.tf`.
-- `.gitattributes` used the invalid line-ending value `eol=tf`; corrected to `eol=lf`.
 
 [v1.0.0]: https://github.com/gccloudone-aurora-iac/terraform-kubernetes-private-cloud-environment/releases/tag/v1.0.0
