@@ -3,6 +3,7 @@ rke2-cilium:
     mode: kubernetes
   routingMode: tunnel
   operator:
+    replicas: 1
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
