@@ -1,15 +1,30 @@
 #cloud-config
 
-# Apt
+# Configure apt repository to point to our internal version
 apt:
+  generate_mirrorlists: false
+  preserve_sources_list: false
+  disable_suites:
+    - updates
+    - backports
+
   primary:
     - arches:
       - amd64
-      uri: https://repos.devops.private-prive.cloud-nuage.canada.ca/deb.debian.org/debian
+      uri: https://artifacts-artefacts.devops.cloud-nuage.canada.ca/artifactory/debian-remote
+
   security:
     - arches:
       - amd64
-      uri: https://repos.devops.private-prive.cloud-nuage.canada.ca/security.debian.org/debian-security
+      uri: https://artifacts-artefacts.devops.cloud-nuage.canada.ca/artifactory/debian-security-remote
+
+# Add credentials for artifactory
+write_files:
+  - path: /etc/apt/auth.conf.d/gcsa.conf
+    owner: 'root:root'
+    permissions: '0650'
+    content: |
+      machine artifacts-artefacts.devops.cloud-nuage.canada.ca login ${gcsa_username} password ${gcsa_password}
 
 # NTP
 ntp:

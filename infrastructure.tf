@@ -5,55 +5,71 @@
 module "infrastructure" {
   source = "./modules/kubernetes-cluster"
 
-  openstack_application_credential_id     = var.openstack_application_credential_id
-  openstack_application_credential_secret = var.openstack_application_credential_secret
-  openstack_domain_id                     = var.openstack_domain_id
-  openstack_project_id                    = var.openstack_project_id
-  openstack_auth_url                      = var.openstack_auth_url
-  openstack_region                        = var.openstack_region
+  depends_on = [
+    openstack_networking_router_interface_v2.system,
+    openstack_networking_router_interface_v2.general,
+    openstack_networking_router_interface_v2.gateway,
+    openstack_networking_router_interface_v2.loadbalancer,
+  ]
 
-  name = var.cluster_name
+  application_credential_id     = var.application_credential_id
+  application_credential_secret = var.application_credential_secret
+  domain_id                     = var.domain_id
+  project_id                    = var.project_id
+  auth_url                      = var.auth_url
+  region                        = var.region
+  availability_zone             = var.availability_zone
 
-  loadbalancer_network_id = module.network_loadbalancer.id
+  name = var.name
 
-  kubernetes_version = var.kubernetes_version
+  network_id = module.network_loadbalancer.id
+
+  kubernetes_version       = var.kubernetes_version
+  openstack_chart_versions = var.openstack_chart_versions
+  image_name               = var.image_name
+  cluster_cidr             = var.cluster_cidr
+  service_cidr             = var.service_cidr
+
+  global_registry_auth_secret = var.global_registry_auth_secret
+  gcsa_username               = var.gcsa_username
+  gcsa_password               = var.gcsa_password
 
   control_pool = {
     name    = "system"
-    flavour = "g4v-16"
-    count   = 1
+    flavour = var.node_pools.system.flavour
+    count   = var.node_pools.system.count
     labels = {
       "node.ssc-spc.gc.ca/use"     = "general"
       "node.ssc-spc.gc.ca/purpose" = "system"
     }
     taints          = []
-    security_groups = ["default"]
-    volume_type     = "performance"
-    volume_size     = 60
+    security_groups = var.node_pools.system.security_groups
+    volume_type     = var.node_pools.system.volume_type
+    volume_size     = var.node_pools.system.volume_size
     roles           = ["etcd", "control"]
     network_id      = module.network_system.id
   }
 
   worker_pool = {
     name    = "general"
-    flavour = "g4v-16"
-    count   = 1
+    flavour = var.node_pools.general.flavour
+    count   = var.node_pools.general.count
     labels = {
       "node.ssc-spc.gc.ca/use"     = "general"
       "node.ssc-spc.gc.ca/purpose" = "general"
     }
     taints          = []
-    security_groups = ["default"]
-    volume_type     = "performance"
-    volume_size     = 60
+    security_groups = var.node_pools.general.security_groups
+    volume_type     = var.node_pools.general.volume_type
+    volume_size     = var.node_pools.general.volume_size
     roles           = ["worker"]
     network_id      = module.network_general.id
   }
 
   additional_pools = [{
     name    = "gateway"
-    flavour = "g4v-16"
-    count   = 1
+    flavour = var.node_pools.gateway.flavour
+    count   = var.node_pools.gateway.count
     labels = {
       "node.ssc-spc.gc.ca/use"     = "general"
       "node.ssc-spc.gc.ca/purpose" = "gateway"
@@ -65,9 +81,9 @@ module "infrastructure" {
         effect = "NoSchedule"
       }
     ]
-    security_groups = ["default"]
-    volume_type     = "performance"
-    volume_size     = 60
+    security_groups = var.node_pools.gateway.security_groups
+    volume_type     = var.node_pools.gateway.volume_type
+    volume_size     = var.node_pools.gateway.volume_size
     roles           = ["worker"]
     network_id      = module.network_gateway.id
   }]

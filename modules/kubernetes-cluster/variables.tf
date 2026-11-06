@@ -2,43 +2,48 @@
 ### OpenStack Resources ###
 ###########################
 
-variable "openstack_application_credential_id" {
-  description = "Application Credential ID used by Rancher to provision on OpenStack."
+variable "application_credential_id" {
+  description = "Application Credential ID for authentication with OpenStack."
   type        = string
 }
 
-variable "openstack_application_credential_secret" {
-  description = "Application Credential Secret used by Rancher to provision on OpenStack."
+variable "application_credential_secret" {
+  description = "Application Credential Secret for authentication with OpenStack."
   type        = string
 
   sensitive = true
 }
 
-variable "openstack_domain_id" {
+variable "domain_id" {
   description = "Domain ID of the OpenStack tenant where to deploy the cluster."
   type        = string
 }
 
-variable "openstack_project_id" {
+variable "project_id" {
   description = "Project ID of the OpenStack project where to deploy the cluster."
   type        = string
 }
 
-variable "openstack_auth_url" {
-  description = "OpenStack Authentication URL."
+variable "auth_url" {
+  description = "OpenStack Authentication URL"
   type        = string
 }
 
-variable "openstack_region" {
+variable "region" {
   description = "OpenStack region where to deploy the cluster."
   type        = string
 }
 
-variable "openstack_availability_zone" {
+variable "availability_zone" {
   description = "OpenStack Availability Zone where to deploy the cluster."
   type        = string
 
   default = null
+}
+
+variable "network_id" {
+  description = "Network ID of the OpenStack network where to deploy the cluster."
+  type        = string
 }
 
 variable "tags" {
@@ -52,7 +57,7 @@ variable "tags" {
 #########################
 
 variable "name" {
-  description = "Name of the cluster. Also names the Rancher cloud credential and prefixes every machine config."
+  description = "Name of the cluster."
   type        = string
 }
 
@@ -60,19 +65,34 @@ variable "image_name" {
   description = "Name of the image for the nodes."
   type        = string
 
-  default = "Debian 12"
+  default = "debian-13-trixie"
 }
 
 variable "kubernetes_version" {
-  description = "The RKE2 version to install, as Rancher reports it (e.g. v1.34.1+rke2r1)."
+  description = "Version of Kubernetes to install."
   type        = string
+
+  default = "v1.36.3+rke2r1"
 }
 
-variable "global_registry" {
-  description = "Global registry for system resources."
-  type        = string
+variable "openstack_chart_versions" {
+  description = "Exact Helm chart versions for the OpenStack cloud controller manager and Cinder CSI driver."
+  type = object({
+    cloud_controller_manager = string
+    cinder_csi               = string
+  })
+  default = {
+    cloud_controller_manager = "2.37.1"
+    cinder_csi               = "2.37.1"
+  }
 
-  default = "docker.io"
+  validation {
+    condition = alltrue([
+      for version in values(var.openstack_chart_versions) :
+      can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$", version))
+    ])
+    error_message = "OpenStack Helm chart versions must be exact semantic versions, not version ranges."
+  }
 }
 
 variable "network_plugin" {
@@ -88,14 +108,14 @@ variable "network_plugin" {
 }
 
 variable "cluster_cidr" {
-  description = "CIDRs used for Kubernetes pods."
+  description = "CIDR of the cluster."
 
   type    = list(string)
   default = ["192.168.0.0/16"]
 }
 
 variable "service_cidr" {
-  description = "CIDRs used for Kubernetes services."
+  description = "Cluster service CIDRs."
 
   type    = list(string)
   default = ["172.16.0.0/20"]
@@ -121,7 +141,6 @@ variable "control_pool" {
     image_name      = optional(string)
     user_data       = optional(string)
     network_id      = optional(string)
-    subnet_id       = optional(string)
   })
 
   default = {}
@@ -147,14 +166,13 @@ variable "worker_pool" {
     image_name      = optional(string)
     user_data       = optional(string)
     network_id      = optional(string)
-    subnet_id       = optional(string)
   })
 
   default = {}
 }
 
 variable "additional_pools" {
-  description = "A list of additional node pools for the cluster, beyond the control and worker pools."
+  description = "List of pools for the cluster."
 
   type = list(object({
     name    = string
@@ -173,19 +191,36 @@ variable "additional_pools" {
     image_name      = optional(string)
     user_data       = optional(string)
     network_id      = optional(string)
-    subnet_id       = optional(string)
   }))
 
   default = []
 }
 
-variable "loadbalancer_network_id" {
+#######################
+### Global Registry ###
+#######################
+
+variable "global_registry" {
+  description = "Global registry for system resources."
   type        = string
-  description = "The ID of the network that LoadBalancers will exist in."
+
+  default = "artifacts-artefacts.devops.cloud-nuage.canada.ca"
 }
 
-variable "force_internal_loadbalancers" {
-  type        = bool
-  description = "If true, only internal load balancers may be used."
-  default     = false
+variable "global_registry_auth_secret" {
+  description = "Secret name containing global registry authentication for system resources."
+  type        = string
+
+  default = "gcsa"
+}
+
+variable "gcsa_username" {
+  description = "Username for the GC Secure Artifacts repositories."
+  type        = string
+}
+
+variable "gcsa_password" {
+  description = "Password for the GC Secure Artifacts repositories."
+  type        = string
+  sensitive   = true
 }

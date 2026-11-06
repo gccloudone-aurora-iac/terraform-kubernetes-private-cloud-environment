@@ -1,3 +1,13 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcsa-helm
+  namespace: kube-system
+type: kubernetes.io/basic-auth
+stringData:
+  username: ${jsonencode(gcsa_username)}
+  password: ${jsonencode(gcsa_password)}
+---
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -6,9 +16,13 @@ metadata:
 spec:
   bootstrap: true
   chart: openstack-cloud-controller-manager
-  repo: https://kubernetes.github.io/cloud-provider-openstack
+  version: ${jsonencode(openstack_chart_versions.cloud_controller_manager)}
+  repo: https://artifacts-artefacts.devops.cloud-nuage.canada.ca/artifactory/api/helm/ssc-pcc-helm
+  authSecret:
+    name: gcsa-helm
   targetNamespace: kube-system
   valuesContent: |-
+    dnsPolicy: Default
     nodeSelector:
       node-role.kubernetes.io/control-plane: 'true'
     tolerations:
@@ -23,19 +37,19 @@ spec:
       - --cluster-cidr=${join(",", cluster_cidr)}
     cloudConfig:
       global:
-        auth-url: ${auth_url}
-        domain-id: ${domain_id}
-        tenant-id: ${project_id}
-        tenant-domain-id: ${domain_id}
-        application-credential-id: ${application_credential_id}
-        application-credential-secret: ${application_credential_secret}
+        auth-url: ${jsonencode(auth_url)}
+        domain-id: ${jsonencode(domain_id)}
+        tenant-id: ${jsonencode(project_id)}
+        tenant-domain-id: ${jsonencode(domain_id)}
+        application-credential-id: ${jsonencode(application_credential_id)}
+        application-credential-secret: ${jsonencode(application_credential_secret)}
         user-domain-id: default
-        region: ${region}
+        region: ${jsonencode(region)}
       loadBalancer:
         enabled: true
-        network-id: ${lb_network_id}
+        network-id: ${jsonencode(network_id)}
         create-monitor: true
-        internal-lb: ${force_internal_lbs}
+        internal-lb: false
         lb-provider: amphorav2
       metadata:
         search-order: metadataService
@@ -48,7 +62,10 @@ metadata:
 spec:
   bootstrap: true
   chart: openstack-cinder-csi
-  repo: https://kubernetes.github.io/cloud-provider-openstack
+  version: ${jsonencode(openstack_chart_versions.cinder_csi)}
+  repo: https://artifacts-artefacts.devops.cloud-nuage.canada.ca/artifactory/api/helm/ssc-pcc-helm
+  authSecret:
+    name: gcsa-helm
   targetNamespace: kube-system
   valuesContent: |-
     secret:
@@ -64,6 +81,8 @@ spec:
         kind: StorageClass
         metadata:
           name: capacity-retain
+          annotations:
+            storageclass.kubernetes.io/is-default-class: "false"
         parameters:
           type: capacity
         provisioner: cinder.csi.openstack.org
@@ -75,6 +94,8 @@ spec:
         kind: StorageClass
         metadata:
           name: capacity-delete
+          annotations:
+            storageclass.kubernetes.io/is-default-class: "false"
         parameters:
           type: capacity
         provisioner: cinder.csi.openstack.org
@@ -86,6 +107,8 @@ spec:
         kind: StorageClass
         metadata:
           name: performance-retain
+          annotations:
+            storageclass.kubernetes.io/is-default-class: "false"
         parameters:
           type: performance
         provisioner: cinder.csi.openstack.org

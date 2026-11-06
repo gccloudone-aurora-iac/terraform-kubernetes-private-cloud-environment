@@ -1,0 +1,74 @@
+# Replace placeholder values before use. Never commit real credentials.
+# Provider authentication is configured separately from these module inputs.
+
+application_credential_id     = ""
+application_credential_secret = ""
+auth_url                      = "https://identity.example.test/v3"
+domain_id                     = ""
+project_id                    = ""
+region                        = "your-region"
+availability_zone             = null
+tags                          = {}
+
+name               = "example-cluster"
+kubernetes_version = "v1.36.3+rke2r1"
+cluster_operators  = []
+image_name         = "debian-13-trixie"
+
+openstack_chart_versions = {
+  cloud_controller_manager = "2.37.1"
+  cinder_csi               = "2.37.1"
+}
+
+node_pools = {
+  system = {
+    count           = 1
+    flavour         = "g4v-16"
+    volume_size     = 60
+    volume_type     = "performance"
+    security_groups = ["default"]
+  }
+  general = {
+    count           = 1
+    flavour         = "g4v-16"
+    volume_size     = 60
+    volume_type     = "performance"
+    security_groups = ["default"]
+  }
+  gateway = {
+    count           = 1
+    flavour         = "g4v-16"
+    volume_size     = 60
+    volume_type     = "performance"
+    security_groups = ["default"]
+  }
+}
+
+cluster_cidr    = ["192.168.0.0/16"]
+service_cidr    = ["172.16.0.0/20"]
+dns_nameservers = ["192.0.2.53"]
+network_name    = "your-network"
+router_name     = "your-router"
+
+network_prefixes = {
+  system = {
+    prefixes_v4 = ["10.0.1.0/24"]
+    prefixes_v6 = []
+  }
+  general = {
+    prefixes_v4 = ["10.0.2.0/24"]
+    prefixes_v6 = []
+  }
+  gateway = {
+    prefixes_v4 = ["10.0.4.0/24"]
+    prefixes_v6 = []
+  }
+  loadbalancer = {
+    prefixes_v4 = ["10.0.6.0/24"]
+    prefixes_v6 = []
+  }
+}
+
+global_registry_auth_secret = "gcsa"
+gcsa_username               = ""
+gcsa_password               = ""

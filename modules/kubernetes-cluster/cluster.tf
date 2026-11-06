@@ -19,24 +19,27 @@ resource "rancher2_machine_config_v2" "this" {
   generate_name = each.key
 
   openstack_config {
-    auth_url                      = var.openstack_auth_url
-    application_credential_id     = var.openstack_application_credential_id
-    application_credential_secret = var.openstack_application_credential_secret
-    region                        = var.openstack_region
-    availability_zone             = coalesce(var.openstack_availability_zone, var.openstack_region)
-    domain_id                     = var.openstack_domain_id
-    tenant_domain_id              = var.openstack_domain_id
-    tenant_id                     = var.openstack_project_id
+    auth_url                      = var.auth_url
+    application_credential_id     = var.application_credential_id
+    application_credential_secret = var.application_credential_secret
+    region                        = var.region
+    availability_zone             = coalesce(var.availability_zone, var.region)
+    domain_id                     = var.domain_id
+    tenant_domain_id              = var.domain_id
+    tenant_id                     = var.project_id
     flavor_name                   = each.value.flavour
     image_name                    = coalesce(each.value.image_name, var.image_name)
-    net_id                        = each.value.network_id
+    net_id                        = coalesce(each.value.network_id, var.network_id)
     sec_groups                    = join(",", each.value.security_groups)
     ssh_user                      = "debian"
-    user_data_file                = coalesce(each.value.user_data, file("${path.module}/config/cloud-init.yaml"))
-    boot_from_volume              = true
-    volume_type                   = each.value.volume_type
-    volume_size                   = each.value.volume_size
-    user_domain_name              = "Default"
+    user_data_file = coalesce(each.value.user_data, templatefile("${path.module}/config/cloud-init.yaml", {
+      gcsa_username = var.gcsa_username,
+      gcsa_password = var.gcsa_password,
+    }))
+    boot_from_volume = true
+    volume_type      = each.value.volume_type
+    volume_size      = each.value.volume_size
+    user_domain_name = "Default"
   }
 }
 
@@ -48,21 +51,37 @@ resource "rancher2_cluster_v2" "this" {
   name               = var.name
   kubernetes_version = var.kubernetes_version
 
-  cloud_credential_secret_name = rancher2_cloud_credential.this.id
-
   enable_network_policy = true
 
   rke_config {
-    machine_selector_config {
-      config = <<EOF
-system-default-registry: "${var.global_registry}"
-cloud-provider-name: external
-EOF
-    }
-
     registries {
       configs {
-        hostname = var.global_registry
+        hostname                = var.global_registry
+        auth_config_secret_name = var.global_registry_auth_secret
+      }
+
+      mirrors {
+        hostname  = "docker.io"
+        endpoints = ["https://${var.global_registry}"]
+        rewrites = {
+          "(.*)" : "docker-docker-remote/$1"
+        }
+      }
+
+      mirrors {
+        hostname  = "quay.io"
+        endpoints = ["https://${var.global_registry}"]
+        rewrites = {
+          "(.*)" : "docker-quay-remote/$1"
+        }
+      }
+
+      mirrors {
+        hostname  = "registry.k8s.io"
+        endpoints = ["https://${var.global_registry}"]
+        rewrites = {
+          "(.*)" : "ssc-pcc-docker-k8s-remote/$1"
+        }
       }
     }
 
@@ -72,6 +91,10 @@ cluster-cidr: ${join(",", var.cluster_cidr)}
 service-cidr: ${join(",", var.service_cidr)}
 disable:
   - rke2-ingress-nginx
+  - rke2-traefik-crd
+  - rke2-traefik
+cloud-provider-name: external
+disable-cloud-controller: true
 EOF
 
     chart_values = yamlencode(merge(
@@ -110,15 +133,17 @@ EOF
     }
 
     additional_manifest = templatefile("${path.module}/config/manifest.yaml.tftpl", {
-      auth_url                      = var.openstack_auth_url,
-      region                        = var.openstack_region,
-      domain_id                     = var.openstack_domain_id,
-      project_id                    = var.openstack_project_id,
-      application_credential_id     = var.openstack_application_credential_id,
-      application_credential_secret = var.openstack_application_credential_secret,
+      auth_url                      = var.auth_url,
+      region                        = var.region,
+      domain_id                     = var.domain_id,
+      project_id                    = var.project_id,
+      application_credential_id     = var.application_credential_id,
+      application_credential_secret = var.application_credential_secret,
       cluster_cidr                  = var.cluster_cidr,
-      lb_network_id                 = var.loadbalancer_network_id
-      force_internal_lbs            = var.force_internal_loadbalancers,
+      network_id                    = var.network_id,
+      gcsa_username                 = var.gcsa_username,
+      gcsa_password                 = var.gcsa_password,
+      openstack_chart_versions      = var.openstack_chart_versions,
     })
   }
 

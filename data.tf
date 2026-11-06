@@ -3,7 +3,7 @@
 # https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/data-sources/networking_network_v2
 #
 data "openstack_networking_network_v2" "external" {
-  name = "external"
+  name = var.network_name
 }
 
 # Use this data source to get the ID of an available OpenStack router.
