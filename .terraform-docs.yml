@@ -1,7 +1,10 @@
 formatter: "markdown table"
 version: "0.20.0"
 
-# Aurora standard. This file is identical in every environment repository.
+settings:
+  lockfile: false
+
+# Standard section headings.
 #
 # Its only purpose is to put emoji on the six generated section headings. Every table row
 # below reproduces terraform-docs' default `markdown table` output byte for byte — verified

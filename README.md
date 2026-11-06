@@ -78,8 +78,8 @@ router interfaces before creating nodes.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_openstack"></a> [openstack](#provider\_openstack) | 3.4.0 |
-| <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | 15.1.2 |
+| <a name="provider_openstack"></a> [openstack](#provider\_openstack) | >= 3.0.0, < 4.0.0 |
+| <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | >= 15.1.2 |
 
 ## 🧩 Modules
 
