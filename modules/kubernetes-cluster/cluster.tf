@@ -32,9 +32,10 @@ resource "rancher2_machine_config_v2" "this" {
     net_id                        = coalesce(each.value.network_id, var.network_id)
     sec_groups                    = join(",", each.value.security_groups)
     ssh_user                      = "debian"
-    user_data_file = coalesce(each.value.user_data, templatefile("${path.module}/config/cloud-init.yaml", {
-      gcsa_username = var.gcsa_username,
-      gcsa_password = var.gcsa_password,
+    user_data_file = coalesce(each.value.user_data, templatefile(each.value.gpu ? "${path.module}/config/cloud-init.gpu.yaml.tftpl" : "${path.module}/config/cloud-init.yaml.tftpl", {
+      gcsa_username         = var.gcsa_username,
+      gcsa_password         = var.gcsa_password,
+      nvidia_driver_version = var.nvidia_driver_version,
     }))
     boot_from_volume = true
     volume_type      = each.value.volume_type
@@ -83,6 +84,22 @@ resource "rancher2_cluster_v2" "this" {
           "(.*)" : "ssc-pcc-docker-k8s-remote/$1"
         }
       }
+
+      mirrors {
+        hostname  = "nvcr.io"
+        endpoints = ["https://${var.global_registry}"]
+        rewrites = {
+          "(.*)" : "ssc-pcc-docker-nvcr-remote/$1"
+        }
+      }
+
+      mirrors {
+        hostname  = "ghcr.io"
+        endpoints = ["https://${var.global_registry}"]
+        rewrites = {
+          "(.*)" : "ssc-pcc-docker-ghcr-remote/$1"
+        }
+      }
     }
 
     machine_global_config = <<EOF
@@ -95,6 +112,7 @@ disable:
   - rke2-traefik
 cloud-provider-name: external
 disable-cloud-controller: true
+disable-kube-proxy: true
 EOF
 
     chart_values = yamlencode(merge(
@@ -129,6 +147,18 @@ EOF
           kind = rancher2_machine_config_v2.this[machine_pools.value.name].kind
           name = rancher2_machine_config_v2.this[machine_pools.value.name].name
         }
+
+        # GPU pools replace nodes delete-first. The default rollout creates the new VM
+        # before removing the old one, which cannot be placed while the old VM holds the
+        # only GPU, so the rollout never finishes. Other pools keep the default surge.
+        dynamic "rolling_update" {
+          for_each = machine_pools.value.gpu ? [1] : []
+
+          content {
+            max_surge       = "0"
+            max_unavailable = "1"
+          }
+        }
       }
     }
 
@@ -144,6 +174,8 @@ EOF
       gcsa_username                 = var.gcsa_username,
       gcsa_password                 = var.gcsa_password,
       openstack_chart_versions      = var.openstack_chart_versions,
+      gpu_operator_version          = var.gpu_operator_version,
+      gpu_operator_enabled          = anytrue([for pool in local.pools : pool.gpu]),
     })
   }
 

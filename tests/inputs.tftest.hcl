@@ -11,7 +11,6 @@ variables {
   name                          = "test-cluster"
   kubernetes_version            = "v1.36.3+rke2r1"
   cluster_operators             = []
-  network_name                  = "test-network"
   router_name                   = "test-router"
   dns_nameservers               = ["192.0.2.53"]
   gcsa_username                 = "test-user"
@@ -23,12 +22,22 @@ run "preserve_defaults" {
 
   assert {
     condition = alltrue([
-      for pool in values(var.node_pools) :
+      for name, pool in var.node_pools :
       pool.count == 1 && pool.flavour == "g4v-16" &&
       pool.volume_size == 60 && pool.volume_type == "performance" &&
       pool.security_groups == tolist(["default"])
-    ])
+    if name != "gpu"])
     error_message = "Default pool sizing and security groups must remain unchanged."
+  }
+
+  assert {
+    condition     = var.node_pools.gpu.enabled == false
+    error_message = "The GPU pool must be disabled by default."
+  }
+
+  assert {
+    condition     = !contains(keys(module.infrastructure.machine_pools), "gpu")
+    error_message = "No GPU machine pool may be planned unless it is enabled."
   }
 
   assert {
@@ -74,6 +83,29 @@ run "override_environment_settings" {
       var.node_pools.system.security_groups == tolist(["default"])
     )
     error_message = "A partial pool override must preserve defaults for the other pools."
+  }
+}
+
+run "enable_gpu_pool" {
+  command = plan
+
+  variables {
+    node_pools = {
+      gpu = {
+        enabled = true
+        count   = 2
+      }
+    }
+  }
+
+  assert {
+    condition     = module.infrastructure.machine_pools["gpu"].gpu && module.infrastructure.machine_pools["gpu"].count == 2
+    error_message = "Enabling the GPU pool must plan a two-node pool named gpu that uses the GPU cloud-init."
+  }
+
+  assert {
+    condition     = length(module.infrastructure.machine_pools) == 4
+    error_message = "Enabling the GPU pool must keep the system, general and gateway pools."
   }
 }
 

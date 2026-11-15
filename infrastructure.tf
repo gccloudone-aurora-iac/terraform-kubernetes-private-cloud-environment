@@ -27,6 +27,8 @@ module "infrastructure" {
   kubernetes_version       = var.kubernetes_version
   openstack_chart_versions = var.openstack_chart_versions
   image_name               = var.image_name
+  nvidia_driver_version    = var.nvidia_driver_version
+  gpu_operator_version     = var.gpu_operator_version
   cluster_cidr             = var.cluster_cidr
   service_cidr             = var.service_cidr
 
@@ -66,7 +68,7 @@ module "infrastructure" {
     network_id      = module.network_general.id
   }
 
-  additional_pools = [{
+  additional_pools = concat([{
     name    = "gateway"
     flavour = var.node_pools.gateway.flavour
     count   = var.node_pools.gateway.count
@@ -86,7 +88,28 @@ module "infrastructure" {
     volume_size     = var.node_pools.gateway.volume_size
     roles           = ["worker"]
     network_id      = module.network_gateway.id
-  }]
+    }], var.node_pools.gpu.enabled ? [{
+    name    = "gpu"
+    flavour = var.node_pools.gpu.flavour
+    count   = var.node_pools.gpu.count
+    labels = {
+      "node.ssc-spc.gc.ca/use"     = "general"
+      "node.ssc-spc.gc.ca/purpose" = "gpu"
+    }
+    taints = [
+      {
+        key    = "node.ssc-spc.gc.ca/purpose"
+        value  = "gpu"
+        effect = "NoSchedule"
+      }
+    ]
+    security_groups = var.node_pools.gpu.security_groups
+    volume_type     = var.node_pools.gpu.volume_type
+    volume_size     = var.node_pools.gpu.volume_size
+    roles           = ["worker"]
+    network_id      = module.network_general.id
+    gpu             = true
+  }] : [])
 }
 
 # Provides a Rancher v2 Cluster Role Template Binding resource.

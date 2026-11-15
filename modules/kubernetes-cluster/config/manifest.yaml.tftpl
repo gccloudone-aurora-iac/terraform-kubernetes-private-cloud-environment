@@ -8,6 +8,17 @@ stringData:
   username: ${jsonencode(gcsa_username)}
   password: ${jsonencode(gcsa_password)}
 ---
+%{ if gpu_operator_enabled ~}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcsa-oci
+  namespace: kube-system
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: '{"auths": {"https://artifacts-artefacts.devops.cloud-nuage.canada.ca": {"auth": "${base64encode(join(":", [gcsa_username, gcsa_password]))}"}}}'
+---
+%{ endif ~}
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -81,8 +92,6 @@ spec:
         kind: StorageClass
         metadata:
           name: capacity-retain
-          annotations:
-            storageclass.kubernetes.io/is-default-class: "false"
         parameters:
           type: capacity
         provisioner: cinder.csi.openstack.org
@@ -94,8 +103,6 @@ spec:
         kind: StorageClass
         metadata:
           name: capacity-delete
-          annotations:
-            storageclass.kubernetes.io/is-default-class: "false"
         parameters:
           type: capacity
         provisioner: cinder.csi.openstack.org
@@ -107,8 +114,6 @@ spec:
         kind: StorageClass
         metadata:
           name: performance-retain
-          annotations:
-            storageclass.kubernetes.io/is-default-class: "false"
         parameters:
           type: performance
         provisioner: cinder.csi.openstack.org
@@ -128,3 +133,111 @@ spec:
         volumeBindingMode: Immediate
         reclaimPolicy: Delete
         allowVolumeExpansion: true
+%{ if gpu_operator_enabled ~}
+---
+# NVIDIA GPU Operator: rendered only when at least one pool has gpu = true.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nvidia-operator
+  labels:
+    namespace.ssc-spc.gc.ca/purpose: system
+    pod-security.kubernetes.io/enforce: privileged
+# H200 (disabled): GPU sharing config for the device plugin. Uncomment together with
+# devicePlugin.config in the gpu-operator values below. Each H200 then advertises
+# `replicas` nvidia.com/gpu, shared by time-slicing (no memory isolation between pods).
+# For isolated slices, use MIG instead (see the mig comment in the values).
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: device-plugin-config
+#   namespace: nvidia-operator
+# data:
+#   time-sliced: |-
+#     version: v1
+#     sharing:
+#       timeSlicing:
+#         resources:
+#           - name: nvidia.com/gpu
+#             replicas: 4
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: gpu-operator
+  namespace: kube-system
+spec:
+  chart: oci://artifacts-artefacts.devops.cloud-nuage.canada.ca/ssc-pcc-nvidia-oci-remote/nvidia/cloud-native-charts/gpu-operator
+  version: ${jsonencode(gpu_operator_version)}
+  dockerRegistrySecret:
+    name: gcsa-oci
+  targetNamespace: nvidia-operator
+  valuesContent: |-
+    # Must stay false while GPU nodes run Debian. NVIDIA publishes driver containers
+    # only for Ubuntu, RHEL, Rocky and SLES, so the operator cannot install a driver
+    # here. The GPU cloud-init (cloud-init.gpu.yaml.tftpl) installs it on the host.
+    # Revisit only if the GPU pool moves to a supported OS such as Ubuntu 24.04.
+    driver:
+      enabled: false
+    # H200 (disabled): share GPUs. Leave off while each card serves one model.
+    # Time-slicing: uncomment with the device-plugin-config ConfigMap above. "default"
+    # applies to every GPU node; override per node with the label
+    # nvidia.com/device-plugin.config=<key>.
+    # devicePlugin:
+    #   config:
+    #     name: device-plugin-config
+    #     default: time-sliced
+    # MIG (isolated memory and compute slices, H200 supports up to 7): set the strategy,
+    # then label nodes with a profile, e.g. nvidia.com/mig.config=all-1g.18gb. Check the
+    # available profiles in the default-mig-parted-config ConfigMap first.
+    # mig:
+    #   strategy: single
+    daemonsets:
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+        - key: node.ssc-spc.gc.ca/purpose
+          operator: Exists
+    operator:
+      nodeSelector:
+        node.ssc-spc.gc.ca/purpose: system
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
+    node-feature-discovery:
+      master:
+        nodeSelector:
+          node.ssc-spc.gc.ca/purpose: system
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+          - key: node-role.kubernetes.io/etcd
+            operator: Exists
+          - key: node.ssc-spc.gc.ca/purpose
+            operator: Exists
+      gc:
+        nodeSelector:
+          node.ssc-spc.gc.ca/purpose: system
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+          - key: node-role.kubernetes.io/etcd
+            operator: Exists
+          - key: node.ssc-spc.gc.ca/purpose
+            operator: Exists
+      worker:
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+          - key: node-role.kubernetes.io/etcd
+            operator: Exists
+          - key: node.ssc-spc.gc.ca/purpose
+            operator: Exists
+    toolkit:
+      env:
+      - name: CONTAINERD_SOCKET
+        value: /run/k3s/containerd/containerd.sock
+%{ endif ~}

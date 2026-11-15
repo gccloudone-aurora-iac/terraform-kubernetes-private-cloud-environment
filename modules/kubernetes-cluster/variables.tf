@@ -95,6 +95,30 @@ variable "openstack_chart_versions" {
   }
 }
 
+variable "nvidia_driver_version" {
+  description = "Exact Debian package version of the NVIDIA driver installed on GPU pools (e.g. 620.70.06-1). Every NVIDIA driver package is pinned to it, so all GPU nodes run the same driver until this changes."
+  type        = string
+
+  default = "620.70.06-1"
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+(\\.[0-9]+)?-[0-9A-Za-z.+~]+$", var.nvidia_driver_version))
+    error_message = "The NVIDIA driver version must be an exact Debian package version such as 620.70.06-1."
+  }
+}
+
+variable "gpu_operator_version" {
+  description = "Exact Helm chart version for the NVIDIA GPU Operator, including the leading v used by NVIDIA's chart tags (e.g. v26.7.2)."
+  type        = string
+
+  default = "v26.7.2"
+
+  validation {
+    condition     = can(regex("^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$", var.gpu_operator_version))
+    error_message = "The GPU Operator chart version must be an exact semantic version, not a version range."
+  }
+}
+
 variable "network_plugin" {
   description = "Network plugin to use for the cluster."
   type        = string
@@ -141,6 +165,7 @@ variable "control_pool" {
     image_name      = optional(string)
     user_data       = optional(string)
     network_id      = optional(string)
+    gpu             = optional(bool, false)
   })
 
   default = {}
@@ -166,6 +191,7 @@ variable "worker_pool" {
     image_name      = optional(string)
     user_data       = optional(string)
     network_id      = optional(string)
+    gpu             = optional(bool, false)
   })
 
   default = {}
@@ -191,6 +217,7 @@ variable "additional_pools" {
     image_name      = optional(string)
     user_data       = optional(string)
     network_id      = optional(string)
+    gpu             = optional(bool, false)
   }))
 
   default = []

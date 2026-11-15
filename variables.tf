@@ -85,6 +85,28 @@ variable "cluster_operators" {
   type        = list(string)
 }
 
+variable "gpu_operator_version" {
+  description = "Exact NVIDIA GPU Operator Helm chart version, including NVIDIA's leading v (e.g. v26.7.2). Only installed when a GPU pool exists."
+  type        = string
+  default     = "v26.7.2"
+
+  validation {
+    condition     = can(regex("^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$", var.gpu_operator_version))
+    error_message = "The GPU Operator chart version must be an exact semantic version, not a version range."
+  }
+}
+
+variable "nvidia_driver_version" {
+  description = "Exact Debian package version of the NVIDIA driver for the GPU pool (e.g. 620.70.06-1). Changing it replaces GPU nodes."
+  type        = string
+  default     = "620.70.06-1"
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+(\\.[0-9]+)?-[0-9A-Za-z.+~]+$", var.nvidia_driver_version))
+    error_message = "The NVIDIA driver version must be an exact Debian package version such as 620.70.06-1."
+  }
+}
+
 variable "image_name" {
   description = "Name of the OpenStack image used for cluster nodes."
   type        = string
@@ -112,6 +134,14 @@ variable "node_pools" {
       count           = optional(number, 1)
       flavour         = optional(string, "g4v-16")
       volume_size     = optional(number, 60)
+      volume_type     = optional(string, "performance")
+      security_groups = optional(list(string), ["default"])
+    }), {})
+    gpu = optional(object({
+      enabled         = optional(bool, false)
+      count           = optional(number, 1)
+      flavour         = optional(string, "p36v-100-gpu")
+      volume_size     = optional(number, 200) # vLLM images and caches need far more than 60 GB
       volume_type     = optional(string, "performance")
       security_groups = optional(list(string), ["default"])
     }), {})
@@ -191,11 +221,6 @@ variable "network_prefixes" {
       prefixes_v6 = []
     }
   }
-}
-
-variable "network_name" {
-  description = "The name of the pre-existing OpenStack network to attach."
-  type        = string
 }
 
 variable "router_name" {

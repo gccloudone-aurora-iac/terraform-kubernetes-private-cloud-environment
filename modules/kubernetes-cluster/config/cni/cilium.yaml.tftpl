@@ -2,6 +2,30 @@ rke2-cilium:
   ipam:
     mode: kubernetes
   routingMode: tunnel
+  # Cilium replaces kube-proxy (RKE2 runs with disable-kube-proxy), so it must reach the
+  # API server without a Service: RKE2 runs a local API proxy on every node at localhost:6443.
+  # Without these two values a Rancher-managed cluster does not finish provisioning.
+  kubeProxyReplacement: true
+  k8sServiceHost: localhost
+  k8sServicePort: 6443
+  # eBPF masquerading lets Cilium use eBPF host routing instead of the kernel stack.
+  # netkit replaces veth pairs for pod interfaces (kernel 6.8+, Cilium 1.16+), so pod
+  # traffic runs close to host-network speed. It needs kube-proxy replacement and eBPF
+  # host routing. Switching an existing node: cilium-agent refuses to start while any pod
+  # on the node still uses veth, so those pods must be deleted (or the node replaced).
+  bpf:
+    masquerade: true
+    datapathMode: netkit
+  # RKE2 chains Cilium with the portmap plugin by default, which makes the chart force
+  # enable-host-legacy-routing. With kube-proxy replacement Cilium handles hostPort
+  # itself, so chaining is not needed and eBPF host routing can switch on.
+  cni:
+    chainingMode: none
+  # Bandwidth manager (EDT-based fair queuing per pod) with BBR congestion control:
+  # steadier throughput and lower latency under load. BBR needs kernel 5.18+.
+  bandwidthManager:
+    enabled: true
+    bbr: true
   operator:
     replicas: 1
     tolerations:

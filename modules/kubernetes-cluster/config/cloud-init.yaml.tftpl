@@ -1,0 +1,79 @@
+#cloud-config
+
+# Configure apt repository to point to our internal version
+apt:
+  generate_mirrorlists: false
+  preserve_sources_list: false
+  disable_suites:
+    - updates
+    - backports
+
+  primary:
+    - arches:
+      - amd64
+      uri: https://artifacts-artefacts.devops.cloud-nuage.canada.ca/artifactory/debian-remote
+
+  security:
+    - arches:
+      - amd64
+      uri: https://artifacts-artefacts.devops.cloud-nuage.canada.ca/artifactory/debian-security-remote
+
+# Add credentials for artifactory
+write_files:
+  - path: /etc/apt/auth.conf.d/gcsa.conf
+    owner: 'root:root'
+    permissions: '0600'
+    content: |
+      machine artifacts-artefacts.devops.cloud-nuage.canada.ca login ${gcsa_username} password ${gcsa_password}
+
+  # Kubernetes nodes run many inotify users (kubelet, containerd, log collectors, apps);
+  # the kernel default of 128 instances per user causes "too many open files". The watch
+  # limit is left to the kernel, which already scales it with memory.
+  - path: /etc/sysctl.d/90-kubernetes-inotify.conf
+    owner: 'root:root'
+    permissions: '0644'
+    content: |
+      fs.inotify.max_user_instances = 8192
+
+  # Graceful node shutdown: when OpenStack stops or reboots the VM, the kubelet gets 60 s
+  # to stop pods (the last 20 s for critical pods). These are KubeletConfiguration fields,
+  # not kubelet flags; RKE2 reads drop-ins from this directory.
+  - path: /var/lib/rancher/rke2/agent/etc/kubelet.conf.d/90-graceful-shutdown.conf
+    owner: 'root:root'
+    permissions: '0600'
+    content: |
+      apiVersion: kubelet.config.k8s.io/v1beta1
+      kind: KubeletConfiguration
+      shutdownGracePeriod: 60s
+      shutdownGracePeriodCriticalPods: 20s
+
+  # unattended-upgrades ships a logind drop-in limiting shutdown delays to 30 s. It sorts
+  # after the kubelet's own 60 s override and wins, so the kubelet's shutdown manager
+  # never starts. A file with the same name in /etc replaces the packaged one.
+  - path: /etc/systemd/logind.conf.d/unattended-upgrades-logind-maxdelay.conf
+    owner: 'root:root'
+    permissions: '0644'
+    content: |
+      [Login]
+      InhibitDelayMaxSec=60
+
+# NTP
+ntp:
+  enabled: true
+  ntp_client: chrony
+  pools:
+    - tko-ott2.time.private-prive.cloud-nuage.canada.ca
+    - tko-ott2.time.private-prive.cloud-nuage.gc.ca
+
+# Packages
+packages:
+  # Core system packages
+  - qemu-guest-agent
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+# Apply sysctl.d now; the first boot read it before cloud-init wrote the file.
+runcmd:
+  - sysctl --system

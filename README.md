@@ -72,14 +72,14 @@ router interfaces before creating nodes.
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
 | <a name="requirement_openstack"></a> [openstack](#requirement\_openstack) | >= 3.0.0, < 4.0.0 |
-| <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | >= 15.1.2 |
+| <a name="requirement_rancher2"></a> [rancher2](#requirement\_rancher2) | >= 15.1.2, < 16.0.0 |
 
 ## 🔌 Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_openstack"></a> [openstack](#provider\_openstack) | >= 3.0.0, < 4.0.0 |
-| <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | >= 15.1.2 |
+| <a name="provider_rancher2"></a> [rancher2](#provider\_rancher2) | >= 15.1.2, < 16.0.0 |
 
 ## 🧩 Modules
 
@@ -100,7 +100,6 @@ router interfaces before creating nodes.
 | [openstack_networking_router_interface_v2.loadbalancer](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_router_interface_v2) | resource |
 | [openstack_networking_router_interface_v2.system](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_router_interface_v2) | resource |
 | [rancher2_cluster_role_template_binding.cluster_operator](https://registry.terraform.io/providers/rancher/rancher2/latest/docs/resources/cluster_role_template_binding) | resource |
-| [openstack_networking_network_v2.external](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/data-sources/networking_network_v2) | data source |
 | [openstack_networking_router_v2.default](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/data-sources/networking_router_v2) | data source |
 
 ## 📥 Inputs
@@ -118,12 +117,13 @@ router interfaces before creating nodes.
 | <a name="input_gcsa_password"></a> [gcsa\_password](#input\_gcsa\_password) | Password for the GC Secure Artifacts repositories. | `string` | n/a | yes |
 | <a name="input_gcsa_username"></a> [gcsa\_username](#input\_gcsa\_username) | Username for the GC Secure Artifacts repositories. | `string` | n/a | yes |
 | <a name="input_global_registry_auth_secret"></a> [global\_registry\_auth\_secret](#input\_global\_registry\_auth\_secret) | Name of the pre-existing Rancher registry authentication secret for system images. | `string` | `"gcsa"` | no |
+| <a name="input_gpu_operator_version"></a> [gpu\_operator\_version](#input\_gpu\_operator\_version) | Exact NVIDIA GPU Operator Helm chart version, including NVIDIA's leading v (e.g. v26.7.2). Only installed when a GPU pool exists. | `string` | `"v26.7.2"` | no |
 | <a name="input_image_name"></a> [image\_name](#input\_image\_name) | Name of the OpenStack image used for cluster nodes. | `string` | `"debian-13-trixie"` | no |
 | <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | The RKE2 version used by the control plane and the default version for the agent nodes, as Rancher reports it (e.g. v1.34.1+rke2r1). | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | The name of the Rancher Cluster. | `string` | n/a | yes |
-| <a name="input_network_name"></a> [network\_name](#input\_network\_name) | The name of the pre-existing OpenStack network to attach. | `string` | n/a | yes |
 | <a name="input_network_prefixes"></a> [network\_prefixes](#input\_network\_prefixes) | Map of network zone names to their corresponding IPv4 and IPv6 prefixes. All four zones (system, general, gateway, loadbalancer) are required. | <pre>map(object({<br/>    prefixes_v4 = list(string)<br/>    prefixes_v6 = list(string)<br/>  }))</pre> | <pre>{<br/>  "gateway": {<br/>    "prefixes_v4": [<br/>      "10.0.4.0/24"<br/>    ],<br/>    "prefixes_v6": []<br/>  },<br/>  "general": {<br/>    "prefixes_v4": [<br/>      "10.0.2.0/24"<br/>    ],<br/>    "prefixes_v6": []<br/>  },<br/>  "loadbalancer": {<br/>    "prefixes_v4": [<br/>      "10.0.6.0/24"<br/>    ],<br/>    "prefixes_v6": []<br/>  },<br/>  "system": {<br/>    "prefixes_v4": [<br/>      "10.0.1.0/24"<br/>    ],<br/>    "prefixes_v6": []<br/>  }<br/>}</pre> | no |
-| <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools) | Sizing and security groups for each node pool. Names, roles, labels, taints, and network assignments remain module-managed. | <pre>object({<br/>    system = optional(object({<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "g4v-16")<br/>      volume_size     = optional(number, 60)<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>    general = optional(object({<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "g4v-16")<br/>      volume_size     = optional(number, 60)<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>    gateway = optional(object({<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "g4v-16")<br/>      volume_size     = optional(number, 60)<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools) | Sizing and security groups for each node pool. Names, roles, labels, taints, and network assignments remain module-managed. | <pre>object({<br/>    system = optional(object({<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "g4v-16")<br/>      volume_size     = optional(number, 60)<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>    general = optional(object({<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "g4v-16")<br/>      volume_size     = optional(number, 60)<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>    gateway = optional(object({<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "g4v-16")<br/>      volume_size     = optional(number, 60)<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>    gpu = optional(object({<br/>      enabled         = optional(bool, false)<br/>      count           = optional(number, 1)<br/>      flavour         = optional(string, "p36v-100-gpu")<br/>      volume_size     = optional(number, 200) # vLLM images and caches need far more than 60 GB<br/>      volume_type     = optional(string, "performance")<br/>      security_groups = optional(list(string), ["default"])<br/>    }), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_nvidia_driver_version"></a> [nvidia\_driver\_version](#input\_nvidia\_driver\_version) | Exact Debian package version of the NVIDIA driver for the GPU pool (e.g. 620.70.06-1). Changing it replaces GPU nodes. | `string` | `"620.70.06-1"` | no |
 | <a name="input_openstack_chart_versions"></a> [openstack\_chart\_versions](#input\_openstack\_chart\_versions) | Exact Helm chart versions for the OpenStack cloud controller manager and Cinder CSI driver. | <pre>object({<br/>    cloud_controller_manager = string<br/>    cinder_csi               = string<br/>  })</pre> | <pre>{<br/>  "cinder_csi": "2.37.1",<br/>  "cloud_controller_manager": "2.37.1"<br/>}</pre> | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project ID of the OpenStack project where to deploy the cluster. | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | OpenStack region where to deploy the cluster. | `string` | n/a | yes |
@@ -133,7 +133,9 @@ router interfaces before creating nodes.
 
 ## 📤 Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_cluster_v1_id"></a> [cluster\_v1\_id](#output\_cluster\_v1\_id) | The v1 compatible ID of the Rancher cluster. |
 <!-- END_TF_DOCS -->
 
 ## 📜 History

@@ -10,10 +10,12 @@ region                        = "your-region"
 availability_zone             = null
 tags                          = {}
 
-name               = "example-cluster"
-kubernetes_version = "v1.36.3+rke2r1"
-cluster_operators  = []
-image_name         = "debian-13-trixie"
+name                  = "example-cluster"
+kubernetes_version    = "v1.36.3+rke2r1"
+cluster_operators     = []
+image_name            = "debian-13-trixie"
+nvidia_driver_version = "620.70.06-1"
+gpu_operator_version  = "v26.7.2"
 
 openstack_chart_versions = {
   cloud_controller_manager = "2.37.1"
@@ -42,12 +44,19 @@ node_pools = {
     volume_type     = "performance"
     security_groups = ["default"]
   }
+  gpu = {
+    enabled         = false
+    count           = 1
+    flavour         = "p36v-100-gpu"
+    volume_size     = 200
+    volume_type     = "performance"
+    security_groups = ["default"]
+  }
 }
 
 cluster_cidr    = ["192.168.0.0/16"]
 service_cidr    = ["172.16.0.0/20"]
 dns_nameservers = ["192.0.2.53"]
-network_name    = "your-network"
 router_name     = "your-router"
 
 network_prefixes = {
